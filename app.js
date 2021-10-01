@@ -7,12 +7,24 @@ const path = require('path')
 // Cookieを読み込むために必要な記述
 const cookieParser = require('cookie-parser')
 
+// Sessionを読み込むために必要な記述
+const session = require('express-session');
+
+const sessionInfo = {
+	secret: 'nodePractice',
+	cookie: { maxAge: 300000 },
+	resave: false,
+	saveUninitialized: false,
+  }
+
+
 const app = express()
+app.use(cookieParser())
+app.use(session(sessionInfo))
 // エンコーディングするための処理
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
-const ejs = require('ejs') //追加
-app.use(cookieParser())
+const ejs = require('ejs')
 
 const port = 3000
 
@@ -40,7 +52,43 @@ db.connect((err) => {
 // 	res.send('Hello Express!!');
 // })
 
+
+app.get("/login", (req, res) => {
+	res.sendFile(__dirname + '/views/login.html');
+})
+
+app.post('/login', (req, res) => {
+	const username = req.body.username;
+	const password = req.body.password;
+	if (username === 'node' && password === 'password') {
+	  req.session.regenerate((err) => {
+		req.session.username = 'node';
+		res.redirect('/');
+	  });
+	} else {
+	  res.redirect('/login');
+	}
+});
+
+app.get('/logout', (req, res) => {
+	req.session.destroy((err) => {
+	  res.redirect('/');
+	});
+  });
+
+app.use((req, res, next) => {
+	console.log(req.session)
+	if (req.session.username) {
+	  next();
+	} else {
+		console.log("login")
+	  res.redirect('/login');
+	}
+});
+
+
 app.get('/', (req, res) => {
+	console.log(req.session)
   const sql = "select * from users";
 	db.query(sql, function (err, result, fields) {  
 	if (err) throw err;
@@ -57,14 +105,6 @@ app.post('/', (req, res) => {
     res.send("登録完了")
 })
 })
-
-app.use((req, res, next) => {
-	if (req.session.username) {
-	  next();
-	} else {
-	  res.redirect('/login');
-	}
-  });
 
 app.get('/create', (req, res) => 
 	res.sendFile(path.join(__dirname, 'html/form.html')))
