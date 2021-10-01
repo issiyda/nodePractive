@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Cookie　を理解する</title>
+</head>
+<body>
+    <h1>Cookie</h1>
+    <form action="/cookie" method="POST">
+    <%= answer %>
+    <input id="buy" type="radio" name="question" value="買う" <%= answer === '買う' ? 'checked' : '' %> >
+    <label for="buy">買う</label>
+    <input id="notBuy" type="radio" name="question" value="買わない" <%= answer === '買わない' ? 'checked' : '' %> >
+    <label for="notBuy" >買わない</label>
+    <button type="submit">決定</button>
+    </form>
+</body>
+</html>
