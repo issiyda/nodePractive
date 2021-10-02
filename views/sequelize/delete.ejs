@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>User Delete</title>
+</head>
+<body>
+    <h1>削除フォーム</h1>
+    <form action="/sequelize/delete/<%= user.id %>" method="POST">
+        name <%= user.name %>さんを削除しますか？<br>
+        <button type="submit">削除する</button>
+    </form>    
+</body>
+</html>

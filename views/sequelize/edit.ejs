@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>User Edit</title>
+</head>
+<body>
+    <h1>更新フォーム</h1>
+    <form action="/sequelize/edit/<%= user.id %>" method="POST">
+        name <input type="text" name="name" value="<%= user.name %>"><br>
+        email <input type="text" name="email" value="<%= user.email %>"><br>
+        <button type="submit">更新</button>
+    </form>    
+</body>
+</html>

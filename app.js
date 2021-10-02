@@ -1,3 +1,6 @@
+// constants
+const { userType } = require("./utils/constants")
+
 // module
 const express = require('express')
 require('dotenv').config();
@@ -9,6 +12,10 @@ const cookieParser = require('cookie-parser')
 
 // Sessionを読み込むために必要な記述
 const session = require('express-session');
+
+const sequelize = require('./db/db-config');
+const DbClient = require("./db/client")
+const User = require("./db/model/user")
 
 const sessionInfo = {
 	secret: 'nodePractice',
@@ -76,15 +83,14 @@ app.get('/logout', (req, res) => {
 	});
   });
 
-app.use((req, res, next) => {
-	console.log(req.session)
-	if (req.session.username) {
-	  next();
-	} else {
-		console.log("login")
-	  res.redirect('/login');
-	}
-});
+// app.use((req, res, next) => {
+// 	console.log(req.session)
+// 	if (req.session.username) {
+// 	  next();
+// 	} else {
+// 	  res.redirect('/login');
+// 	}
+// });
 
 
 app.get('/', (req, res) => {
@@ -106,8 +112,7 @@ app.post('/', (req, res) => {
 })
 })
 
-app.get('/create', (req, res) => 
-	res.sendFile(path.join(__dirname, 'html/form.html')))
+app.get('/create', (req, res) => res.sendFile(path.join(__dirname, 'views/form.html')))
 
 
 app.get('/users', (req, res) => {
@@ -163,13 +168,83 @@ app.post('/cookie', (req, res) => {
 	res.cookie("answer", answer).redirect('/cookie')
 });
 
-//　ユーザ作成
-// const sql = "INSERT INTO users(name,email,type, password) VALUES('ishida2','ishida2@test.com', 1, 'aaaaaaaa')"
 
-// db.query(sql,function(err, result, fields){
-// 	if (err) throw err;
-// 	console.log(result)
-// })
+//=========================
+// sequelize編
+//=========================
+
+
+// sequelizeに繋がってるか確かめる
+app.get("/connection", async (req, res) => {
+    try {
+        await sequelize.authenticate();
+        console.log('Connection has been established successfully.');
+		res.send("Connection OK")
+      } catch (error) {
+        console.error('Unable to connect to the database:', error);
+      }
+})
+
+// sequelizeでユーザ作成フォーム表示
+app.get("/sequelize/list", async (req, res) => {
+	const users = await User.findAll()
+	res.render('sequelize/index',{users });
+})
+
+
+// sequelizeでユーザ作成フォーム表示
+app.get("/sequelize/create", async (req, res) => {
+	User.sync({ alter: true })
+	res.sendFile(path.join(__dirname, 'views/sequelize/form.html'))
+})
+
+// sequelizeでユーザ作成
+app.post("/sequelize/create", async (req, res) => {
+	const params = req.body
+	const user = await User.create({
+		type: userType.USER,
+		email: params.email,
+		name: params.name,
+		password: params.password
+	})
+	res.redirect('/sequelize/list');
+})
+
+// sequelizeでユーザ更新フォーム
+app.get("/sequelize/edit/:userId", async (req, res) => {
+	console.log("userId",req.params.userId)
+	const user = await User.findByPk(req.params.userId)
+	console.log("user",user)
+	res.render('sequelize/edit',{ user });
+})
+
+// sequelizeでユーザ更新
+app.post("/sequelize/edit/:userId", async (req, res) => {
+	const params = req.body
+	console.log(req.params.userId)
+	const user = await User.update({
+		email: params.email,
+		name: params.name,
+	},{
+	where: { id: req.params.userId }
+	})
+	const targetUser = await User.findByPk(user[0])
+	res.redirect('/sequelize/list');
+})
+
+// sequelizeでユーザ削除フォーム
+app.get("/sequelize/delete/:userId", async (req, res) => {
+	const user = await User.findByPk(req.params.userId)
+	res.render('sequelize/delete',{user});
+})
+
+// sequelizeでユーザ削除
+app.post("/sequelize/delete/:userId", async (req, res) => {
+	const user = await User.destroy({
+		where: { id: req.params.userId }
+	})
+	res.redirect('/sequelize/list');
+})
 
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
